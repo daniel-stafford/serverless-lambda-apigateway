@@ -56,16 +56,16 @@ exports.handler = async (event, context, callback) => {
   });
 
   upload.on('httpUploadProgress', (progress) => {
-    console.log(`[${event.videoUrl}] copying video ...`, progress);
+    console.log(`[${event.videoUrl}] downloading ...`, progress);
   });
 
   try {
     await upload.send();
     await startRekognitionJobs(bucket, key);
     callback(null, {
-      bucketName: process.env.BUCKET_NAME,
+      bucketName: bucket,
       key,
-      url: `s3://${process.env.BUCKET_NAME}/${key}`
+      url: `s3://${bucket}/${key}`
     });
   } catch (error) {
     callback(error);
