@@ -1,2 +1,2 @@
-# serverless-lambda-apigateway
-[Tech Talk] Serverless: Introduction to Lambda and API Gateway
+# eezery-driver-api-infra
+[Client] AWS infrastructure for Eezery driver API development

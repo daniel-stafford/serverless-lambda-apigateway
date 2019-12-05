@@ -7,3 +7,6 @@
 
 # .tfvars files
 *.tfvars
+
+lambdas/*.zip
+node_modules
