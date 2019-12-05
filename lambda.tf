@@ -1,5 +1,5 @@
 resource "aws_iam_role" "lambda-youtube-downloader" {
-  name  = "${var.project}-lambda-youtube-downloader-${var.environment}"
+  name = "${var.project}-lambda-youtube-downloader-${var.environment}"
 
   assume_role_policy = <<EOF
 {
@@ -67,7 +67,7 @@ EOF
 
 data "archive_file" "lambda-youtube-downloader" {
   type        = "zip"
-  source_dir = "${path.module}/lambdas/youtube-downloader"
+  source_dir  = "${path.module}/lambdas/youtube-downloader"
   output_path = "${path.module}/lambdas/youtube-downloader.zip"
 }
 
@@ -79,17 +79,17 @@ resource "aws_lambda_function" "youtube-downloader" {
   source_code_hash = filebase64sha256(data.archive_file.lambda-youtube-downloader.output_path)
   runtime          = "nodejs8.10"
   timeout          = 60
-	environment {
-		variables = {
-			BUCKET_NAME = aws_s3_bucket.youtube-videos.bucket
-			SNS_ARN = aws_sns_topic.recognition-notification.arn
-      ROLE_ARN = aws_iam_role.video-recognition.arn
-		}
-	}
+  environment {
+    variables = {
+      BUCKET_NAME = aws_s3_bucket.youtube-videos.bucket
+      SNS_ARN     = aws_sns_topic.recognition-notification.arn
+      ROLE_ARN    = aws_iam_role.video-recognition.arn
+    }
+  }
 }
 
 resource "aws_iam_role" "video-recognition" {
-  name  = "${var.project}-video-recognition-${var.environment}"
+  name = "${var.project}-video-recognition-${var.environment}"
 
   assume_role_policy = <<EOF
 {
@@ -139,7 +139,7 @@ EOF
 }
 
 resource "aws_iam_role" "lambda-recognition-post-process" {
-  name  = "${var.project}-lambda-recognition-post-process-${var.environment}"
+  name = "${var.project}-lambda-recognition-post-process-${var.environment}"
 
   assume_role_policy = <<EOF
 {
@@ -190,7 +190,7 @@ EOF
 
 data "archive_file" "lambda-recognition-post-process" {
   type        = "zip"
-  source_dir = "${path.module}/lambdas/recognition-post-process"
+  source_dir  = "${path.module}/lambdas/recognition-post-process"
   output_path = "${path.module}/lambdas/recognition-post-process.zip"
 }
 
