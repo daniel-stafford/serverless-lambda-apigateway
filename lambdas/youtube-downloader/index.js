@@ -5,7 +5,6 @@ const S3 = new AWS.S3({ signatureVersion: 'v4' });
 const rekognition = new AWS.Rekognition({apiVersion: '2016-06-27', region: 'us-east-1'});
 
 async function startRekognitionJobs(bucket, key) {
-  key = "e881c2ac-84e6-4c3d-ae6e-6ca14e68cb17.mp4";
   const fileName = key.substring(key.lastIndexOf('/') + 1);
   console.log(`Recognition: ${fileName}, ${bucket}, ${key}`);
 
@@ -31,7 +30,7 @@ async function startRekognitionJobs(bucket, key) {
   }
 }
 
-exports.handler = async (event, context, callback) => {   
+exports.handler = (event, context, callback) => {
   if (!event.videoUrl) {
     return callback(new Error('videoUrl missing in event'));
   }
@@ -59,17 +58,18 @@ exports.handler = async (event, context, callback) => {
     console.log(`[${event.videoUrl}] downloading ...`, progress);
   });
 
-  try {
-    await upload.send();
-    await startRekognitionJobs(bucket, key);
-    callback(null, {
-      bucketName: bucket,
-      key,
-      url: `s3://${bucket}/${key}`
-    });
-  } catch (error) {
-    callback(error);
-  }
+  upload.send((error) => {
+    if (error) {
+      callback(error);
+    } else {
+      startRekognitionJobs(bucket, key);
+      callback(null, {
+        bucketName: bucket,
+        key,
+        url: `s3://${bucket}/${key}`
+      });
+    }
+  });
 
   downloader.pipe(downloadStream);
 }
