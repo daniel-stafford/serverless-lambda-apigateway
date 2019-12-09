@@ -20,7 +20,7 @@ def response_error(message, status=500):
 def insert(params):
     projectId = str(uuid.uuid4())
     try:
-        response = table.put_item(
+        table.put_item(
             Item={
                 'projectId': projectId,
                 'name': params['name'],
@@ -31,7 +31,9 @@ def insert(params):
         )
         return {
             'statusCode': 200,
-            'body': json.dumps(response)
+            'body': json.dumps({
+                'projectId': projectId
+            })
         }
     except ClientError as e:
         return response_error(e.response['Error']['Message'])
