@@ -2,7 +2,10 @@ const stream = require('stream');
 const youtubeDownloader = require('youtube-dl');
 const AWS = require('aws-sdk');
 const S3 = new AWS.S3({ signatureVersion: 'v4' });
-const rekognition = new AWS.Rekognition({apiVersion: '2016-06-27', region: 'us-east-1'});
+const rekognition = new AWS.Rekognition({
+  apiVersion: '2016-06-27',
+  region: 'us-east-1'
+});
 
 async function startRekognitionJobs(bucket, key) {
   const fileName = key.substring(key.lastIndexOf('/') + 1);

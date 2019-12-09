@@ -1,5 +1,8 @@
 const AWS = require('aws-sdk');
-const rekognition = new AWS.Rekognition({apiVersion: '2016-06-27', region: 'us-east-1'});
+const rekognition = new AWS.Rekognition({
+  apiVersion: '2016-06-27',
+  region: 'us-east-1'
+});
 
 exports.handler = async (event, context, callback) => {
   try {
@@ -22,7 +25,7 @@ exports.handler = async (event, context, callback) => {
 
     if (api === 'StartContentModeration') {
       const moderationResult = await rekognition.getContentModeration(params).promise();
-      console.log('Moderation:', moderationResult.ModerationLabels);
+      console.log('Moderation labels:', moderationResult.ModerationLabels);
     }
     else if (api === 'StartLabelDetection') {
       const result = await rekognition.getLabelDetection(params).promise();
