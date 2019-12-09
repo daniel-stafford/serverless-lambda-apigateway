@@ -10,3 +10,4 @@
 
 lambdas/*.zip
 node_modules
+.ropeproject
