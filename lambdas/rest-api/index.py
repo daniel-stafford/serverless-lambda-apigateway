@@ -18,11 +18,11 @@ def response_error(message, status=500):
 
 
 def insert(params):
-    projectId = str(uuid.uuid4())
+    project_id = str(uuid.uuid4())
     try:
         table.put_item(
             Item={
-                'projectId': projectId,
+                'projectId': project_id,
                 'name': params['name'],
                 'description': params['description'],
                 'deadline': params['deadline'],
@@ -32,18 +32,18 @@ def insert(params):
         return {
             'statusCode': 200,
             'body': json.dumps({
-                'projectId': projectId
+                'projectId': project_id
             })
         }
     except ClientError as e:
         return response_error(e.response['Error']['Message'])
 
 
-def update(params):
+def update(project_id, params):
     try:
         response = table.update_item(
             Key={
-                'projectId': params['projectId']
+                'projectId': project_id
             },
             UpdateExpression='set #name=:name,'
             'description=:description,'
@@ -67,11 +67,11 @@ def update(params):
         return response_error(e.response['Error']['Message'])
 
 
-def delete(params):
+def delete(project_id):
     try:
         table.delete_item(
             Key={
-                'projectId': params['projectId']
+                'projectId': project_id
             }
         )
         return {
@@ -81,11 +81,11 @@ def delete(params):
         return response_error(e.response['Error']['Message'])
 
 
-def get(params):
+def get(project_id):
     try:
         response = table.get_item(
             Key={
-                'projectId': params['projectId']
+                'projectId': project_id
             }
         )
         return {
@@ -103,10 +103,10 @@ def handler(event, context):
     if action == 'insert':
         return insert(payload)
     elif action == 'update':
-        return update(payload)
+        return update(event['projectId'], payload)
     elif action == 'delete':
-        return delete(payload)
+        return delete(event['projectId'])
     elif action == 'get':
-        return get(payload)
+        return get(event['projectId'])
     else:
         return response_error('Not found', 404)
