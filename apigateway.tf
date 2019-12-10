@@ -127,7 +127,7 @@ resource "aws_api_gateway_method" "project-insert" {
 
 resource "aws_api_gateway_method" "project-update" {
   rest_api_id          = aws_api_gateway_rest_api.projects.id
-  resource_id          = aws_api_gateway_resource.projects.id
+  resource_id          = aws_api_gateway_resource.project-id.id
   request_validator_id = aws_api_gateway_request_validator.projects.id
   http_method          = "PUT"
   authorization        = "NONE"
@@ -215,7 +215,8 @@ resource "aws_api_gateway_integration" "project-get" {
   request_templates = {
     "application/json" = <<-EOF
     {
-      "action" : "get"
+      "action" : "get",
+      "projectId": "$input.params('projectId')"
     }
 EOF
   }
@@ -246,7 +247,7 @@ EOF
 
 resource "aws_api_gateway_integration" "project-update" {
   rest_api_id             = aws_api_gateway_rest_api.projects.id
-  resource_id             = aws_api_gateway_resource.projects.id
+  resource_id             = aws_api_gateway_resource.project-id.id
   http_method             = aws_api_gateway_method.project-update.http_method
   type                    = "AWS"
   integration_http_method = "POST"
@@ -284,15 +285,15 @@ EOF
 }
 
 resource "aws_api_gateway_deployment" "projects" {
-  depends_on = [
-    aws_api_gateway_integration.projects,
-    aws_api_gateway_integration.project-insert,
-    aws_api_gateway_integration.project-get,
-    aws_api_gateway_integration.project-update,
-    aws_api_gateway_integration.project-delete
-  ]
-
   rest_api_id = aws_api_gateway_rest_api.projects.id
+
+  variables = {
+    deployed_at = timestamp()
+  }
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_api_gateway_stage" "dev" {
@@ -321,16 +322,230 @@ resource "aws_api_gateway_method_response" "project-insert-200" {
 }
 
 resource "aws_api_gateway_integration_response" "project-insert-200" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.projects.id
+  http_method       = aws_api_gateway_method.project-insert.http_method
+  status_code       = aws_api_gateway_method_response.project-insert-200.status_code
+  selection_pattern = "-"
+}
+
+resource "aws_api_gateway_method_response" "project-insert-500" {
   rest_api_id = aws_api_gateway_rest_api.projects.id
   resource_id = aws_api_gateway_resource.projects.id
   http_method = aws_api_gateway_method.project-insert.http_method
-  status_code = aws_api_gateway_method_response.project-insert-200.status_code
+  status_code = 500
+}
+
+resource "aws_api_gateway_integration_response" "project-insert-500" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.projects.id
+  http_method       = aws_api_gateway_method.project-insert.http_method
+  status_code       = aws_api_gateway_method_response.project-insert-500.status_code
+  selection_pattern = ".*InternalError.*"
 
   response_templates = {
-    "application/json" = <<EOF
-    {
-      "body": $input.json('$')
-    }
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "project-update-200" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-update.http_method
+  status_code = 200
+}
+
+resource "aws_api_gateway_integration_response" "project-update-200" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-update.http_method
+  status_code       = aws_api_gateway_method_response.project-update-200.status_code
+  selection_pattern = "-"
+}
+
+resource "aws_api_gateway_method_response" "project-update-500" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-update.http_method
+  status_code = 500
+}
+
+resource "aws_api_gateway_method_response" "project-update-404" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-update.http_method
+  status_code = 404
+}
+
+resource "aws_api_gateway_integration_response" "project-update-404" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-update.http_method
+  status_code       = aws_api_gateway_method_response.project-update-404.status_code
+  selection_pattern = ".*NotFound.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
+# Non-default response only applies to error cases (e.g, when Lambda throws exception)
+resource "aws_api_gateway_integration_response" "project-update-500" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-update.http_method
+  status_code       = aws_api_gateway_method_response.project-update-500.status_code
+  selection_pattern = ".*InternalError.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "project-get-200" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-get.http_method
+  status_code = 200
+}
+
+resource "aws_api_gateway_integration_response" "project-get-200" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-get.http_method
+  status_code       = aws_api_gateway_method_response.project-get-200.status_code
+  selection_pattern = "-"
+}
+
+resource "aws_api_gateway_method_response" "project-get-404" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-get.http_method
+  status_code = 404
+}
+
+resource "aws_api_gateway_integration_response" "project-get-404" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-get.http_method
+  status_code       = aws_api_gateway_method_response.project-get-404.status_code
+  selection_pattern = ".*NotFound.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "project-get-500" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-get.http_method
+  status_code = 500
+}
+
+resource "aws_api_gateway_integration_response" "project-get-500" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-get.http_method
+  status_code       = aws_api_gateway_method_response.project-get-500.status_code
+  selection_pattern = ".*InternalError.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "project-delete-204" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-delete.http_method
+  status_code = 204
+}
+
+resource "aws_api_gateway_integration_response" "project-delete-204" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-delete.http_method
+  status_code       = aws_api_gateway_method_response.project-delete-204.status_code
+  selection_pattern = "-"
+}
+
+resource "aws_api_gateway_method_response" "project-delete-404" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-delete.http_method
+  status_code = 404
+}
+
+resource "aws_api_gateway_integration_response" "project-delete-404" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-delete.http_method
+  status_code       = aws_api_gateway_method_response.project-delete-404.status_code
+  selection_pattern = ".*NotFound.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
+resource "aws_api_gateway_method_response" "project-delete-500" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.project-id.id
+  http_method = aws_api_gateway_method.project-delete.http_method
+  status_code = 500
+}
+
+resource "aws_api_gateway_integration_response" "project-delete-500" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.project-id.id
+  http_method       = aws_api_gateway_method.project-delete.http_method
+  status_code       = aws_api_gateway_method_response.project-delete-500.status_code
+  selection_pattern = ".*InternalError.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
 EOF
   }
 }
