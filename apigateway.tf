@@ -1,3 +1,52 @@
+resource "aws_api_gateway_account" "this" {
+  cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
+}
+
+resource "aws_iam_role" "cloudwatch" {
+  name = "${var.project}-cloudwatch-${var.environment}"
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "apigateway.amazonaws.com"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+EOF
+}
+
+resource "aws_iam_role_policy" "cloudwatch" {
+  role = aws_iam_role.cloudwatch.id
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Action": [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:DescribeLogGroups",
+          "logs:DescribeLogStreams",
+          "logs:PutLogEvents",
+          "logs:GetLogEvents",
+          "logs:FilterLogEvents"
+        ],
+        "Resource": "*"
+      }
+    ]
+}
+EOF
+}
+
 resource "aws_api_gateway_rest_api" "projects" {
   name        = "${var.project}-projects-${var.environment}"
   description = "Example Projects REST API"
@@ -28,9 +77,16 @@ resource "aws_api_gateway_model" "project" {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "minItems": 1
     }
-  }
+  },
+  "required": [
+    "name",
+    "description",
+    "deadline",
+    "technologies"
+  ]
 }
 EOF
 }
@@ -237,5 +293,44 @@ resource "aws_api_gateway_deployment" "projects" {
   ]
 
   rest_api_id = aws_api_gateway_rest_api.projects.id
-  stage_name  = "test"
+}
+
+resource "aws_api_gateway_stage" "dev" {
+  stage_name    = "dev"
+  rest_api_id   = aws_api_gateway_rest_api.projects.id
+  deployment_id = aws_api_gateway_deployment.projects.id
+}
+
+resource "aws_api_gateway_method_settings" "settings" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  stage_name  = aws_api_gateway_stage.dev.stage_name
+  method_path = "*/*"
+
+  settings {
+    metrics_enabled    = true
+    data_trace_enabled = true
+    logging_level      = "INFO"
+  }
+}
+
+resource "aws_api_gateway_method_response" "project-insert-200" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.projects.id
+  http_method = aws_api_gateway_method.project-insert.http_method
+  status_code = 200
+}
+
+resource "aws_api_gateway_integration_response" "project-insert-200" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.projects.id
+  http_method = aws_api_gateway_method.project-insert.http_method
+  status_code = aws_api_gateway_method_response.project-insert-200.status_code
+
+  response_templates = {
+    "application/json" = <<EOF
+    {
+      "body": $input.json('$')
+    }
+EOF
+  }
 }
