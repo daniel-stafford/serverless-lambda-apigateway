@@ -70,7 +70,7 @@ resource "aws_lambda_function" "detect-image-label" {
 
   environment {
     variables = {
-      BUCKET= aws_s3_bucket.images.bucket
+      BUCKET = aws_s3_bucket.images.bucket
     }
   }
 }

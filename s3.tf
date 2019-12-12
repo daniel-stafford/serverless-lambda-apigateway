@@ -1,6 +1,6 @@
 resource "aws_s3_bucket" "youtube-videos" {
   bucket        = "${var.company}-${var.project}-youtube-videos-${var.environment}"
-  acl           = "public-read"
+  acl           = "private"
   force_destroy = true
   region        = var.aws_region
 
@@ -14,7 +14,7 @@ resource "aws_s3_bucket" "youtube-videos" {
 
 resource "aws_s3_bucket" "images" {
   bucket        = "${var.company}-${var.project}-internet-images-${var.environment}"
-  acl           = "public-read"
+  acl           = "private"
   force_destroy = true
   region        = var.aws_region
 
