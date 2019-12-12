@@ -26,4 +26,5 @@ AWS_DEFAULT_REGION=$aws_region \
 aws lambda invoke \
   --function-name $function_name \
   --payload "$payload" \
-  /tmp/${name}.json && cat /tmp/${name}.json && echo
+  --output json \
+  /tmp/${name}.json && jq '.' /tmp/${name}.json && echo

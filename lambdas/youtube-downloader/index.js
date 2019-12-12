@@ -7,7 +7,7 @@ const rekognition = new AWS.Rekognition({
   region: 'us-east-1'
 });
 
-async function startRekognitionJobs(bucket, key) {
+function startRekognitionJobs(bucket, key) {
   const fileName = key.substring(key.lastIndexOf('/') + 1);
   console.log(`Recognition: ${fileName}, ${bucket}, ${key}`);
 
@@ -24,10 +24,8 @@ async function startRekognitionJobs(bucket, key) {
         RoleArn: process.env.ROLE_ARN,
       }
     };
-    const moderationJob = await rekognition.startContentModeration(params).promise();
-    const labelJob = await rekognition.startLabelDetection(params).promise();
-    console.log('Moderation job:', moderationJob);
-    console.log('Label job:', labelJob);
+    rekognition.startContentModeration(params).promise();
+    rekognition.startLabelDetection(params).promise();
   } catch (error) {
     console.error(`Failed to start recognition jobs: ${bucket}/${key}`, error);
   }
