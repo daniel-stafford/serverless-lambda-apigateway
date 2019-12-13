@@ -314,6 +314,46 @@ resource "aws_api_gateway_method_settings" "settings" {
   }
 }
 
+resource "aws_api_gateway_method_response" "projects-200" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.projects.id
+  http_method = aws_api_gateway_method.projects.http_method
+  status_code = 200
+}
+
+resource "aws_api_gateway_integration_response" "projects-200" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.projects.id
+  http_method       = aws_api_gateway_method.projects.http_method
+  status_code       = aws_api_gateway_method_response.projects-200.status_code
+  selection_pattern = "-"
+}
+
+resource "aws_api_gateway_method_response" "projects-500" {
+  rest_api_id = aws_api_gateway_rest_api.projects.id
+  resource_id = aws_api_gateway_resource.projects.id
+  http_method = aws_api_gateway_method.projects.http_method
+  status_code = 500
+}
+
+resource "aws_api_gateway_integration_response" "projects-500" {
+  rest_api_id       = aws_api_gateway_rest_api.projects.id
+  resource_id       = aws_api_gateway_resource.projects.id
+  http_method       = aws_api_gateway_method.projects.http_method
+  status_code       = aws_api_gateway_method_response.projects-500.status_code
+  selection_pattern = ".*InternalError.*"
+
+  response_templates = {
+    "application/json" = <<-EOF
+      #set ($errorMessageObj = $util.parseJson($input.path('$.errorMessage')))
+      {
+        "error" : "$errorMessageObj.error",
+        "message" : "$errorMessageObj.message"
+      }
+EOF
+  }
+}
+
 resource "aws_api_gateway_method_response" "project-insert-200" {
   rest_api_id = aws_api_gateway_rest_api.projects.id
   resource_id = aws_api_gateway_resource.projects.id
@@ -548,4 +588,8 @@ resource "aws_api_gateway_integration_response" "project-delete-500" {
       }
 EOF
   }
+}
+
+output "api_gateway_invoke_url" {
+  value = aws_api_gateway_stage.dev.invoke_url
 }

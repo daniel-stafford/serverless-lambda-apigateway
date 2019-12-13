@@ -2,9 +2,7 @@
 
 ## Setup
 1. Make sure you complete the steps in the [Preparation](https://github.com/Integrify-Finland/infrastructure-as-code-intro) for your AWS credentials setup
-
 2. Clone this repository
-
 3. Create a file called `terraform.tfvars` and put in it following information:
 ```
 aws_region = "us-east-1"

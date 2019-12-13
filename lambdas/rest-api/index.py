@@ -99,11 +99,26 @@ def get(project_id):
         return response_error(e.response['Error']['Message'])
 
 
+def get_all():
+    try:
+        response = table.scan()
+        data = response['Items']
+
+        while 'LastEvaluatedKey' in response:
+            response = table.scan()
+            data.extend(response['Items'])
+        return data
+    except ClientError:
+        return response_error('Internal error')
+
+
 def handler(event, context):
     action = event['action']
     payload = event.get('payload')
 
-    if action == 'insert':
+    if action == 'get_all':
+        return get_all()
+    elif action == 'insert':
         return insert(payload)
     elif action == 'update':
         return update(event['projectId'], payload)
