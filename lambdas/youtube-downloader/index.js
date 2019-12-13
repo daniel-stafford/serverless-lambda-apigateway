@@ -7,28 +7,25 @@ const rekognition = new AWS.Rekognition({
   region: 'us-east-1'
 });
 
-function startRekognitionJobs(bucket, key) {
+function startRekognitionJobs(bucket, key, minConfidence) {
   const fileName = key.substring(key.lastIndexOf('/') + 1);
   console.log(`Recognition: ${fileName}, ${bucket}, ${key}`);
 
-  try {
-    const params = {
-      Video: {
-        S3Object: {
-          Bucket: bucket,
-          Name: key,
-        },
+  const params = {
+    Video: {
+      S3Object: {
+        Bucket: bucket,
+        Name: key,
       },
-      NotificationChannel: {
-        SNSTopicArn: process.env.SNS_ARN,
-        RoleArn: process.env.ROLE_ARN,
-      }
-    };
-    rekognition.startContentModeration(params).promise();
-    rekognition.startLabelDetection(params).promise();
-  } catch (error) {
-    console.error(`Failed to start recognition jobs: ${bucket}/${key}`, error);
-  }
+    },
+    NotificationChannel: {
+      SNSTopicArn: process.env.SNS_ARN,
+      RoleArn: process.env.ROLE_ARN,
+    },
+    MinConfidence: minConfidence,
+  };
+  rekognition.startContentModeration(params).promise();
+  rekognition.startLabelDetection(params).promise();
 }
 
 exports.handler = (event, context, callback) => {
@@ -52,6 +49,9 @@ exports.handler = (event, context, callback) => {
       Bucket: bucket,
       Key: key,
       Body: downloadStream,
+      Metadata: {
+        videoUrl: event.videoUrl,
+      }
     },
   });
 
@@ -59,11 +59,13 @@ exports.handler = (event, context, callback) => {
     console.log(`[${event.videoUrl}] downloading ...`, progress);
   });
 
+  const minConfidence = event.minConfidence || 90;
+
   upload.send((error) => {
     if (error) {
       callback(error);
     } else {
-      startRekognitionJobs(bucket, key);
+      startRekognitionJobs(bucket, key, minConfidence);
       callback(null, {
         bucketName: bucket,
         key,

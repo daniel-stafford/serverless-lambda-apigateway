@@ -92,6 +92,24 @@ resource "aws_iam_role_policy" "lambda-recognition-post-process" {
       "Resource": [
         "*"
       ]
+    },
+    {
+      "Action": [
+        "dynamodb:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ]
+    },
+    {
+      "Action": [
+        "s3:*"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "*"
+      ]
     }
   ]
 }
@@ -110,8 +128,14 @@ resource "aws_lambda_function" "recognition-post-process" {
   role             = aws_iam_role.lambda-recognition-post-process.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256(data.archive_file.lambda-recognition-post-process.output_path)
-  runtime          = "nodejs8.10"
+  runtime          = "nodejs10.x"
   timeout          = 60
+
+  environment {
+    variables = {
+      DYNAMODB_TABLE = aws_dynamodb_table.video-labels.name
+    }
+  }
 }
 
 resource "aws_lambda_permission" "recognition-post-process" {

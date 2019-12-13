@@ -9,3 +9,15 @@ resource "aws_dynamodb_table" "projects" {
     type = "S"
   }
 }
+
+resource "aws_dynamodb_table" "video-labels" {
+  name           = "VideoLabels"
+  read_capacity  = 5
+  write_capacity = 2
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+}
