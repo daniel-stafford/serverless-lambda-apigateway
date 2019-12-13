@@ -60,3 +60,9 @@ curl -X PUT <dns>/projects/<project_id> -H "content-type: application/json" -d '
 ```
 curl -X DELETE <dns>/projects/<project_id>
 ```
+
+## Destroy
+Remember to ALWAYS destroy the infrastructure once you've finished experimenting or you'll get a bill from AWS.
+```
+terraform destroy -force
+```
