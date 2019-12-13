@@ -29,3 +29,34 @@ Where `<access_key>` and `<secret_key>` are your AWS IAM user credentials
 ```
 ./invoke.sh youtube-downloader '{"videoUrl": "<youtube_video_url>"}'
 ```
+
+4. REST API:
+* Get the DNS of the API Gateway:
+```
+echo output.api_gateway_invoke_url | terraform console
+```
+
+* Get all projects:
+```
+curl -X GET <dns>/projects | jq '.'
+```
+
+* Get one project:
+```
+curl -X GET <dns>/projects/<project_id> | jq '.'
+```
+
+* Create one project:
+```
+curl -X POST <dns>/projects -H "content-type: application/json" -d '{"name": "Test", "description": "Test project", "deadline": "today", "technologies": ["React", "Javascript"]}' | jq '.'
+```
+
+* Update one project:
+```
+curl -X PUT <dns>/projects/<project_id> -H "content-type: application/json" -d '{"name": "Test", "description": "Test project", "deadline": "today", "technologies": ["React", "Javascript"]}' | jq '.'
+```
+
+* Delete one project:
+```
+curl -X DELETE <dns>/projects/<project_id>
+```
