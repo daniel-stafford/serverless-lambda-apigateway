@@ -22,7 +22,7 @@ Where `<access_key>` and `<secret_key>` are your AWS IAM user credentials
 
 2. Image object detection/recognition:
 ```
-./invoke detect-image-label '{"imageUrl": "<url">}'
+./invoke.sh detect-image-label '{"imageUrl": "<url">}'
 ```
 
 3. Youtube video object detection/recognition:
