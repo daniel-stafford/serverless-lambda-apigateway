@@ -121,7 +121,7 @@ resource "aws_api_gateway_method" "project-insert" {
   }
 
   depends_on = [
-    "aws_api_gateway_model.project"
+    aws_api_gateway_model.project
   ]
 }
 
@@ -141,7 +141,7 @@ resource "aws_api_gateway_method" "project-update" {
   }
 
   depends_on = [
-    "aws_api_gateway_model.project"
+    aws_api_gateway_model.project
   ]
 }
 
@@ -199,7 +199,7 @@ EOF
   }
 
   depends_on = [
-    "aws_api_gateway_method.projects"
+    aws_api_gateway_method.projects
   ]
 }
 
