@@ -77,8 +77,7 @@ resource "aws_lambda_function" "youtube-downloader" {
   role             = aws_iam_role.lambda-youtube-downloader.arn
   handler          = "index.handler"
   source_code_hash = filebase64sha256(data.archive_file.lambda-youtube-downloader.output_path)
-  # More info: https://github.com/widdix/aws-lambda-youtube-dl
-  runtime          = "nodejs8.10" # Note: Update to 10.x and fix the python runtime in node
+  runtime          = "nodejs12.x"
   timeout          = 60
   environment {
     variables = {
