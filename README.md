@@ -17,7 +17,7 @@ Where `<access_key>` and `<secret_key>` are your AWS IAM user credentials
 ## Test
 1. Hello Lambda:
 ```
-./invoke.sh '{"name": "Your name"}'
+./invoke.sh hello '{"name": "Your name"}'
 ```
 
 2. Image object detection/recognition:
@@ -33,7 +33,7 @@ Where `<access_key>` and `<secret_key>` are your AWS IAM user credentials
 4. REST API:
 * Get the DNS of the API Gateway:
 ```
-echo output.api_gateway_invoke_url | terraform console
+echo aws_api_gateway_stage.dev.invoke_url | terraform console
 ```
 
 * Get all projects:
