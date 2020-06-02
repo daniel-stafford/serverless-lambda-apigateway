@@ -6,7 +6,7 @@ provider "aws" {
   region     = var.aws_region
   access_key = var.aws_access_key
   secret_key = var.aws_secret_key
-  version    = "2.31.0"
+  version    = "2.39.0"
 }
 
 provider "null" {
